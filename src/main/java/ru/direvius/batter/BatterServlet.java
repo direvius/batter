@@ -35,11 +35,15 @@ public class BatterServlet extends HttpServlet{
         if(query!=null)
                 sb.append('?')
                 .append(query);
-        String requestString = sb.toString();
+        String requestString = UriUtil.normalizeUri(sb.toString());
         if(storage != null && storage.containsKey(requestString)){
-            resp.getWriter().print(storage.get(requestString));
+            resp.setContentType("text/xml");
+            resp.setStatus(HttpServletResponse.SC_OK);
+            resp.getWriter().println(storage.get(requestString));
             logger.info("200\tSent response");
         } else if(requestString.equals("/")) {
+            resp.setStatus(HttpServletResponse.SC_OK);
+            resp.setContentType("text/xml");
             sb = new StringBuilder();
             sb.append("<html><body>");
             for(String key: storage.keySet()){
@@ -47,8 +51,7 @@ public class BatterServlet extends HttpServlet{
                         .append(key).append("</a><br/>");
             }
             sb.append("</body></html>");
-            resp.getWriter().print(sb);
-            resp.flushBuffer();
+            resp.getWriter().println(sb);
         } else {
             resp.sendError(404, "Could not find content for: "+requestString);
             logger.warn("404\tCould not find content for:\t{}", requestString);

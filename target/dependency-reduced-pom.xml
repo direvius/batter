@@ -4,7 +4,7 @@
   <groupId>ru.direvius</groupId>
   <artifactId>batter</artifactId>
   <name>batter</name>
-  <version>1.6-SNAPSHOT</version>
+  <version>2.3-SNAPSHOT</version>
   <url>http://maven.apache.org</url>
   <build>
     <plugins>
