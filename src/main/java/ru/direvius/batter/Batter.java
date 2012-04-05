@@ -6,44 +6,80 @@ package ru.direvius.batter;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
+import java.lang.management.ManagementFactory;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.logging.Level;
+import javax.management.InstanceAlreadyExistsException;
+import javax.management.MBeanRegistrationException;
+import javax.management.MBeanServer;
+import javax.management.MalformedObjectNameException;
+import javax.management.NotCompliantMBeanException;
+import javax.management.ObjectName;
+import org.eclipse.jetty.jmx.MBeanContainer;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.util.log.Log;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.direvius.batter.mbeans.BatterServletController;
 
 /**
  *
  * @author direvius
  */
 public class Batter{
-    private static Logger logger = LoggerFactory.getLogger(App.class);
+    private static Logger logger = LoggerFactory.getLogger(Batter.class);
     Server server;
     BatterServlet servlet;
     public Batter(int port){
-        server = new Server(port);
-        
-        QueuedThreadPool tp = new QueuedThreadPool(
-                new ArrayBlockingQueue<Runnable>(1000));
-        tp.setMaxThreads(512);
-        server.setThreadPool(tp);
-        
-        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
-        
-        context.setContextPath("/");
-        server.setHandler(context);
-        
-        servlet = new BatterServlet();
-        
-        
-        context.addServlet(new ServletHolder(servlet), "/*");
-        server.setStopAtShutdown(true);
+            
+            server = new Server(port);
+            
+            QueuedThreadPool tp = new QueuedThreadPool(
+                    new ArrayBlockingQueue<Runnable>(1000));
+            tp.setMaxThreads(512);
+            server.setThreadPool(tp);
+            
+            ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
+            
+            context.setContextPath("/");
+            server.setHandler(context);
+            
+            servlet = new BatterServlet();
+            
+            
+            context.addServlet(new ServletHolder(servlet), "/*");
+            server.setStopAtShutdown(true);
+            
+            MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+            
+            MBeanContainer mbcontainer = new MBeanContainer(mbs);
+            server.getContainer().addEventListener(mbcontainer);
+            server.addBean(mbcontainer);
+            mbcontainer.addBean(Log.getLogger(Batter.class));
+            try{
+                ObjectName name = new ObjectName("ru.direvius.batter.mbeans:type=BatterServletController");
+                mbs.registerMBean(new BatterServletController(servlet), name);
+            }
+            catch (InstanceAlreadyExistsException ex) {
+                java.util.logging.Logger.getLogger(Batter.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            catch (MBeanRegistrationException ex) {
+                java.util.logging.Logger.getLogger(Batter.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            catch (NotCompliantMBeanException ex) {
+                java.util.logging.Logger.getLogger(Batter.class.getName()).log(Level.SEVERE, null, ex);
+            }        
+            catch (MalformedObjectNameException ex) {
+                java.util.logging.Logger.getLogger(Batter.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            catch (NullPointerException ex) {
+                java.util.logging.Logger.getLogger(Batter.class.getName()).log(Level.SEVERE, null, ex);
+            }
     }
     public Batter start() throws Exception{
         server.start();
