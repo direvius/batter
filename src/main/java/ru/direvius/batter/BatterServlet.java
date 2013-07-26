@@ -15,7 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
+ * Service logic is here. What to do on GET request.
  * @author direvius
  */
 public class BatterServlet extends HttpServlet{

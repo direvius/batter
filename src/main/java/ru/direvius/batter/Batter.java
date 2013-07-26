@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 import ru.direvius.batter.mbeans.BatterServletController;
 
 /**
- *
+ * Server logic. Set server parameters, initialize thread pool, load data.
  * @author direvius
  */
 public class Batter{
@@ -93,6 +93,9 @@ public class Batter{
         server.join();
         return this;
     }
+    /**
+    * read lines until line started with '--' occured
+    */
     private String readResponse(BufferedReader r) throws IOException{
         StringBuilder sb = new StringBuilder();
         while(r.ready()){
@@ -105,6 +108,9 @@ public class Batter{
         }
         return sb.toString();
     }
+    /**
+    * load uri-response dictionary
+    */
     public Batter loadStorage(BufferedReader r) throws IOException{
         Map<String, String> result = new HashMap<String, String>();
         while(r.ready()){
